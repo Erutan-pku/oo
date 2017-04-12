@@ -14,3 +14,5 @@ oo course, http://sei.pku.edu.cn/~caodg/course/oo/
 * [甲方需求文档](https://github.com/zhongyehong/oo-homework/blob/740f55bb10169b0eb114bfaa3e26101026b2a190/library.md ) 
 
 * [业务目标与涉众分析报告](https://github.com/Erutan-pku/oo/blob/86b3b8f7a5e7ceb09f158632ea108a970c3e2ddc/图书馆管理系统业务目标与涉众分析.md)
+
+* [需求分析报告](https://github.com/Erutan-pku/oo/blob/master/图书馆管理系统需求分析报告.md)
