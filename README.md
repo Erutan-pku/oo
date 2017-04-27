@@ -15,3 +15,4 @@ oo course, http://sei.pku.edu.cn/~caodg/course/oo/
 * [业务目标与涉众分析报告](https://github.com/Erutan-pku/oo/blob/86b3b8f7a5e7ceb09f158632ea108a970c3e2ddc/图书馆管理系统业务目标与涉众分析.md)
 * [需求分析报告](https://github.com/Erutan-pku/oo/blob/master/图书馆管理系统需求分析报告.md)
 * [系统分析](https://github.com/Erutan-pku/oo/blob/master/图书馆管理系统系统分析报告.md)
+* [系统设计报告](https://github.com/Erutan-pku/oo/blob/master/图书馆管理系统系统设计报告.md)
