@@ -1,0 +1,9 @@
+*.doc
+*.docx
+*.pyc
+*.xlsx
+*.pptx
+#*.gz
+#*.zip
+#*.rar
+__ignore__.*
