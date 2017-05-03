@@ -16,3 +16,5 @@ oo course, http://sei.pku.edu.cn/~caodg/course/oo/
 * [需求分析报告](https://github.com/Erutan-pku/oo/blob/master/图书馆管理系统需求分析报告.md)
 * [系统分析](https://github.com/Erutan-pku/oo/blob/master/图书馆管理系统系统分析报告.md)
 * [系统设计报告](https://github.com/Erutan-pku/oo/blob/master/图书馆管理系统系统设计报告.md)
+* [系统交付报告](https://github.com/Erutan-pku/oo/blob/master/图书馆管理系统系统交付报告.md)
+* [系统地址](http://59.108.48.17:8080/test_Library.html)
