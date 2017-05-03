@@ -1,0 +1,202 @@
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>图书馆管理系统</title>
+</head>
+<body>
+	<script src="http://59.108.48.17:8080/js/jquery.min.js"></script>
+	<h1>图书馆管理系统<h1>
+	<br><HR>
+	<h2>非用户操作</h2>
+    <form>
+		checklog<br>
+		<input type="button" value="checklog" onclick=checklog()>
+	</form>
+	<br><HR>
+	<h2>一般用户操作</h2>
+	<form>
+		<form>
+			login<br>
+			<input name='login_UserID' id='login_UserID' placeholder='用户名'>
+			<input name='login_password' id='login_password' placeholder='密码', value='mima~'>
+			<input type="button" value="login" onclick=login()>
+		</form>
+		<form>
+			logout<br>
+			<input type="button" value="logout" onclick=logout()>
+		</form>
+		<form>
+			checkBookID<br>
+			<input name='checkBookID_bookID' id='checkBookID_bookID' placeholder='查询书籍ID'>
+			<input type="button" value="checkBookID" onclick=checkBookID()>
+		</form>
+		<form>
+			checkBookList<br>
+			<input type="button" value="checkBookList" onclick=checkBookList()>
+		</form>
+		<form>
+			checkBorrowedBookList_me<br>
+			<input type="button" value="checkBorrowedBookList_me" onclick=checkBorrowedBookListme()>
+		</form>
+		<form>
+			renewBook<br>
+			<input name='renewBook_bookID' id='renewBook_bookID' placeholder='续借书籍ID'>
+			<input type="button" value="renewBook" onclick=renewBook()>
+		</form>
+	</form>
+	<br><HR>
+	<h2>管理员操作</h2>
+	<form>
+		<form>
+			changeRight<br>
+			<input name='changeRight_changedID' id='changeRight_changedID' placeholder='被修改的用户名'>
+			<input type="button" value="punishUser" onclick=punishUser()>
+	        <input type="button" value="recoverUser" onclick=recoverUser()>
+		</form>
+		<form>
+			addBook<br>
+			<input name='addBook_bookID' id='addBook_bookID' placeholder='添加书籍的ID'>
+			<input name='addBook_bookName' id='addBook_bookName' placeholder='添加书籍的名字'>
+			<input name='addBook_bookInfor' id='addBook_bookInfor' placeholder='添加书籍的其它信息'>
+			<input type="button" value="addBook" onclick=addBook()>
+		</form>
+		<form>
+			removeBook<br>
+			<input name='removeBook_bookID' id='removeBook_bookID' placeholder='删除书籍的ID'>
+			<input type="button" value="removeBook" onclick=removeBook()>
+		</form>
+		<form>
+			checkBorrowedBookList_user<br>
+			<input name='checkBorrowedBookList_user_checkUserID' id='checkBorrowedBookList_user_checkUserID' placeholder='被查询的用户ID'>
+			<input type="button" value="checkBorrowedBookList_user" onclick=checkBorrowedBookListuser()>
+		</form>
+		<form>
+			borrowBook<br>
+			<input name='borrowBook_bookID' id='borrowBook_bookID' placeholder='所借书籍ID'>
+			<input name='borrowBook_borrowedUserID' id='borrowBook_borrowedUserID' placeholder='借书用户ID'>
+			<input type="button" value="borrowBook" onclick=borrowBook()>
+		</form>
+		<form>
+			returnBook<br>
+			<input name='returnBook_bookID' id='returnBook_bookID' placeholder='所还书籍ID'>
+			<input type="button" value="returnBook" onclick=returnBook()>
+		</form>
+	</form>
+	<br><HR>
+	<h2>超级管理员操作</h2>
+	<form>
+	    <form>
+			changeKeeper<br>
+	        <input name='changeKeeper_changedID' id='changeKeeper_changedID' placeholder='被修改的用户名'>
+			<input name='changeKeeper_superPassword' id='changeKeeper_superPassword' placeholder='超级管理员密码', value='nice_job'>
+			<input type="button" value="MakeKeeper" onclick=MakeKeeper()>
+	        <input type="button" value="RemoveKeeper" onclick=RemoveKeeper()>
+		</form>
+	</form>
+
+	<script>
+		var PostUrl = "http://59.108.48.17:8080/Library/WebSever";
+		function success(data){
+			alert(data);
+		}
+		function login() {
+			$.post(PostUrl, { 
+				type	     : "login",
+				ID  	     : document.getElementById("login_UserID").value,
+				password     : document.getElementById("login_password").value
+			}, success);
+		}
+        function logout() {
+			$.post(PostUrl, { 
+				type	     : "logout"
+			}, success);
+		}
+        function checklog() {
+			$.post(PostUrl, { 
+				type	     : "checklog"
+			}, success);
+		}
+        function MakeKeeper() {
+			$.post(PostUrl, { 
+				type	     : "makeKeeper",
+				ID  	     : document.getElementById("changeKeeper_changedID").value,
+				superPassword: document.getElementById("changeKeeper_superPassword").value
+			}, success);
+		}
+        function RemoveKeeper() {
+			$.post(PostUrl, { 
+				type	     : "removeKeeper",
+				ID  	     : document.getElementById("changeKeeper_changedID").value,
+				superPassword: document.getElementById("changeKeeper_superPassword").value
+			}, success);
+		}
+		function punishUser() {
+			$.post(PostUrl, { 
+				type	     : "punishUser",
+				changedID    : document.getElementById("changeRight_changedID").value
+			}, success);
+		}
+        function recoverUser() {
+			$.post(PostUrl, { 
+				type	    : "recoverUser",
+				changedID   : document.getElementById("changeRight_changedID").value
+			}, success);
+		}
+		function addBook() {
+			$.post(PostUrl, { 
+				type	    : "addBook",
+				bookID    	: document.getElementById("addBook_bookID").value,
+				bookName    : document.getElementById("addBook_bookName").value,
+				bookInfor   : document.getElementById("addBook_bookInfor").value
+			}, success);
+		}
+		function removeBook() {
+			$.post(PostUrl, { 
+				type	    : "removeBook",
+				bookID    	: document.getElementById("removeBook_bookID").value
+			}, success);
+		}
+		function checkBorrowedBookListuser() {
+			$.post(PostUrl, { 
+				type	    : "checkBorrowedBookList_user",
+				checkUserID : document.getElementById("checkBorrowedBookList_user_checkUserID").value
+			}, success);
+		}
+		function borrowBook() {
+			$.post(PostUrl, { 
+				type	    : "borrowBook",
+				bookID    	: document.getElementById("borrowBook_bookID").value,
+				borrowedUserID: document.getElementById("borrowBook_borrowedUserID").value
+			}, success);
+		}
+		function returnBook() {
+			$.post(PostUrl, { 
+				type	    : "returnBook",
+				bookID    	: document.getElementById("returnBook_bookID").value
+			}, success);
+		}
+		function checkBookID() {
+			$.post(PostUrl, { 
+				type	    : "checkBookID",
+				bookID    	: document.getElementById("checkBookID_bookID").value
+			}, success);
+		}
+		function checkBookList() {
+			$.post(PostUrl, { 
+				type	    : "checkBookList"
+			}, success);
+		}
+		function checkBorrowedBookListme() {
+			$.post(PostUrl, { 
+				type	    : "checkBorrowedBookList_me"
+			}, success);
+		}
+		function renewBook() {
+			$.post(PostUrl, { 
+				type	    : "renewBook",
+				bookID    	: document.getElementById("renewBook_bookID").value
+			}, success);
+		}
+	</script>
+</body>
+</html>

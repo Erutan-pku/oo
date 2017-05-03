@@ -1,0 +1,15 @@
+<!DOCTYPE web-app PUBLIC
+  '-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN'
+  'http://java.sun.com/dtd/web-app_2_3.dtd'>
+  
+<web-app>
+  <servlet>
+       <servlet-name>WebSever</servlet-name>
+       <servlet-class>WebSever</servlet-class>
+   </servlet>
+
+   <servlet-mapping>
+       <servlet-name>WebSever</servlet-name>
+       <url-pattern>/WebSever</url-pattern>
+   </servlet-mapping>
+</web-app>
