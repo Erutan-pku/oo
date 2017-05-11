@@ -2,7 +2,7 @@
 *.docx
 *.pyc
 *.xlsx
-*.pptx
+#*.pptx
 #*.gz
 #*.zip
 #*.rar
