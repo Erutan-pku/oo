@@ -8,6 +8,7 @@ oo course, http://sei.pku.edu.cn/~caodg/course/oo/
 ### Part_1 甲方：课程管理系统
 
 * [课程管理系统需求报告](https://github.com/Erutan-pku/oo/blob/aa7753dbc432e93740e6ff006d88ac35453a4b38/课程管理系统需求报告.md)
+* [课程管理系统需求变更](https://github.com/Erutan-pku/oo/blob/master/课程管理系统需求变更.md)
 
 ### Part_2 乙方：图书馆系统
 
