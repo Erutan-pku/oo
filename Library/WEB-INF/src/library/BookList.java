@@ -47,6 +47,16 @@ public class BookList {
 	public Book searchBookID(String bookID) {
 		return booklist.getOrDefault(bookID, null);
 	}
+	public Vector<Book> searchBooksName(String bookName) {
+		Vector<Book> ret = new Vector<>();
+		for (String key : booklist.keySet()) {
+			Book book_t = booklist.get(key);
+			if (book_t.getName().indexOf(bookName) == -1)
+				continue;
+			ret.add(book_t);
+		}
+		return ret;
+	}
 	public Vector<Book> searchUserBooks(String UserID) {
 		Vector<Book> ret = new Vector<>();
 		Vector<String> BookIDList = dataBase.getUserBorrowedList("'"+UserID+"'");
@@ -54,10 +64,26 @@ public class BookList {
 			ret.add(booklist.get(bookID));
 		return ret;
 	}
+	public Vector<Book> searchDueBooks(String UserID) {
+		Date date_now = new Date();
+		Vector<Book> ret = new Vector<>();
+		Vector<String> BookIDList = dataBase.getUserBorrowedList("'"+UserID+"'");
+		for (String bookID : BookIDList) {
+			Book book = booklist.get(bookID);
+			
+			Date date_then = book.getReturnTime();
+			long intervalMilli = date_then.getTime() - date_now.getTime();
+		    int delta_days = (int) (intervalMilli / (24 * 60 * 60 * 1000));
+		    if (delta_days > 30) 
+		    	continue;
+		    
+			ret.add(book);
+		}
+		return ret;
+	}
 	public Vector<Book> getAllBooks() {
 		Vector<Book> ret = new Vector<Book>();
 		for (String BookID : booklist.keySet())
 			ret.add(booklist.get(BookID));
 		return ret;
-	}
-}
+	}}

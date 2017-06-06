@@ -14,6 +14,7 @@ import javax.servlet.http.HttpSession;
 import dataBase.DataBase;
 import library.Book;
 import library.Library;
+import library.User;
 
 public class WebSever extends HttpServlet
 {
@@ -28,26 +29,6 @@ public class WebSever extends HttpServlet
 	static {
 		library = new Library(dataBase);
 	}
-	/**
-	 * Check password using the ultra-user API
-	 * Now, always return True.
-	 * @param UserID
-	 * @param password
-	 * @return
-	 */
-	static boolean checkAccount(String UserID, String password) {
-		return true;
-	}
-    /**
-     * Return True only if the superPassword is correct and IP is in special field.
-     * Now, only check the superPassword
-     * @param password
-     * @param ip 
-     * @return
-     */
-	static boolean checkSuperPassword(String superPassword, String IP) {
-    	return superPassword.equals("nice_job");
-    }
 	/**
      * get information from request.
      * @param request
@@ -68,24 +49,25 @@ public class WebSever extends HttpServlet
 			return null;
 		}
     }
-	private static String checkLogin(HttpServletRequest request, JSONObject ret) {
+	private static User checkLogin(HttpServletRequest request, JSONObject ret, boolean checkKeeper) {
 		String UserID = (String) request.getSession().getAttribute("userID");
 		if (UserID.equals("#NULL")) {
 			ret.accumulate("isSuccess", "false");
 			ret.accumulate("error", "needLogin");
 			return null;
 		}
-		return UserID;
-	}
-	private static boolean checkKeeper(JSONObject ret, String UserID) {
-		String isKeeper = dataBase.getElementField("user", "isKeeper", "uniformID", "'"+UserID+"'");
-    	System.out.println(isKeeper);
-		if (!isKeeper.equals("1")) {
-    		ret.accumulate("isSuccess", "false");
+		User user = library.userList.getUser(UserID);
+		if (user == null) {
+			ret.accumulate("isSuccess", "true");
+			ret.accumulate("error", "wrongUserIDSession");
+			return null;
+		}
+		if (checkKeeper && !user.isKeeper) {
+			ret.accumulate("isSuccess", "false");
 			ret.accumulate("error", "NotKeeper");
-			return false;
-    	}
-    	return true;
+			return null;
+		}
+		return user;
 	}
 
 	@Override
@@ -118,6 +100,7 @@ public class WebSever extends HttpServlet
 		 * logout
 		 * checkBookID
 		 * checkBookList
+		 * checkBookName
 		 * checkBorrowedBookList_me
 		 * renewBook
 		 * 
@@ -146,13 +129,13 @@ public class WebSever extends HttpServlet
 		} else if (Type.equals("checklog")) {
 			checklog(request, ret);
 		} else if (Type.equals("makeKeeper")) {
-			changeKeeper(request, ret, IP, "1");
+			changeKeeper(request, ret, IP, true);
 		} else if (Type.equals("removeKeeper")) {
-			changeKeeper(request, ret, IP, "0");
+			changeKeeper(request, ret, IP, false);
 		} else if (Type.equals("punishUser")) {
-			changeRight(request, ret, "0");
+			changeRight(request, ret, false);
 		} else if (Type.equals("recoverUser")) {
-			changeRight(request, ret, "1");
+			changeRight(request, ret, true);
 		} else if (Type.equals("addBook")) {
 			addBook(request, ret);
 		} else if (Type.equals("removeBook")) {
@@ -161,8 +144,12 @@ public class WebSever extends HttpServlet
 			checkBookID(request, ret);
 		} else if (Type.equals("checkBookList")) {
 			checkBookList(request, ret);
+		} else if (Type.equals("checkBookName")) {
+			checkBookName(request, ret);
 		} else if (Type.equals("checkBorrowedBookList_me")) {
 			checkBorrowedBookList_me(request, ret);
+		} else if (Type.equals("checkBorrowedBookList_me_due")) {
+			checkBorrowedBookList_me_due(request, ret);
 		} else if (Type.equals("checkBorrowedBookList_user")) {
 			checkBorrowedBookList_user(request, ret);
 		} else if (Type.equals("borrowBook")) {
@@ -197,16 +184,15 @@ public class WebSever extends HttpServlet
     	String ID 		= Data.getString("ID");
     	String password = Data.getString("password");
     	
-    	if (!checkAccount(ID, password)) {
+    	if (!library.userList.checkAccount(ID, password)) {
     		ret.accumulate("isSuccess", "false");
 			ret.accumulate("error", "WrongPassword");
 			return;
     	}
     	
-    	if (!dataBase.checkElement("user", "uniformID", "'"+ID+"'")) {
+    	if (!library.userList.checkHas(ID))
     		ret.accumulate("register", "true");
-    		dataBase.InsertUser("'"+ID+"'");
-    	}
+    	library.userList.loginOrRegister(ID);
     	
     	request.getSession().setAttribute("userID", ID);
     	ret.accumulate("isSuccess", "true");
@@ -219,12 +205,9 @@ public class WebSever extends HttpServlet
      */
     public void logout(HttpServletRequest request, JSONObject ret) {
 		log.writeLine(new JSONObject().toString());
-		String UserID = (String) request.getSession().getAttribute("userID");
-		if (UserID.equals("#NULL")) {
-			ret.accumulate("isSuccess", "false");
-			ret.accumulate("error", "NoRecord");
-			return;
-		}
+		User user = checkLogin(request, ret, false);
+    	if (user == null) return;
+
 		request.getSession().setAttribute("userID", "#NULL");
     	ret.accumulate("isSuccess", "true");
     }
@@ -237,17 +220,23 @@ public class WebSever extends HttpServlet
     public void checklog(HttpServletRequest request, JSONObject ret) {
     	JSONObject Data = new JSONObject();
 		log.writeLine(Data.toString());
-		String UserID = (String) request.getSession().getAttribute("userID");
-		if (UserID.equals("#NULL")) {
+		String userID = (String) request.getSession().getAttribute("userID");
+		if (userID.equals("#NULL")) {
 			ret.accumulate("isSuccess", "false");
 			ret.accumulate("error", "NoRecord");
 			return;
 		}
-		Vector<String> UserData = dataBase.getData("user", "uniformID", "'"+UserID+"'");
+		User user = library.userList.getUser(userID);
+		if (user == null) {
+			ret.accumulate("isSuccess", "true");
+			ret.accumulate("error", "wrongUserIDSession");
+			return;
+		}
+		
     	ret.accumulate("isSuccess", "true");
-    	ret.accumulate("uniformID", UserData.get(0));
-    	ret.accumulate("hasRight", UserData.get(1));
-    	ret.accumulate("isKeeper", UserData.get(2));
+    	ret.accumulate("uniformID", user.userID);
+    	ret.accumulate("hasRight", user.hasRight);
+    	ret.accumulate("isKeeper", user.isKeeper);
     }
     /**
      * 指定管理员权限
@@ -255,32 +244,25 @@ public class WebSever extends HttpServlet
      * @param ret
      * @param IP
      */
-    public void changeKeeper(HttpServletRequest request, JSONObject ret, String IP,String value) {
+    public void changeKeeper(HttpServletRequest request, JSONObject ret, String IP, boolean value) {
     	String[] inforKey = {"ID", "superPassword"};
     	JSONObject Data = getInformation(request, inforKey, ret);
     	if (Data == null) return;
     	String ID 		= Data.getString("ID");
     	String superPassword = Data.getString("superPassword");
     	
-    	if (!checkSuperPassword(superPassword, IP)) {
+    	if (!library.userList.checkSuperPassword(superPassword, IP)) {
     		ret.accumulate("isSuccess", "false");
 			ret.accumulate("error", "WrongSuperPasswordIP");
 			return;
     	}
     	
-    	if (!dataBase.checkElement("user", "uniformID", "'"+ID+"'")) {
+    	boolean isSuccess = library.userList.changKeeper(ID, value);
+    	if (!isSuccess) {
     		ret.accumulate("isSuccess", "false");
-			ret.accumulate("error", "NoSuchUser");
+			ret.accumulate("error", "changeKeeperFail");
 			return;
     	}
-    	
-    	String string_db = dataBase.getElementField("user", "isKeeper", "uniformID", "'"+ID+"'");
-    	if (string_db.equals(value)) {
-    		ret.accumulate("isSuccess", "false");
-    		ret.accumulate("error", "NothingChanged,isKeeper="+string_db);
-			return;
-    	}
-    	dataBase.updateField("user", "uniformID", "'"+ID+"'", "isKeeper", "'"+value+"'");
     	ret.accumulate("isSuccess", "true");
     }
     /**
@@ -288,48 +270,22 @@ public class WebSever extends HttpServlet
      * @param request
      * @param ret
      */
-    public void changeRight(HttpServletRequest request, JSONObject ret, String value) {
-    	String UserID = checkLogin(request, ret);
-    	if (UserID == null) return;
-    	
-    	boolean isKeeper = checkKeeper(ret, UserID);
-    	if (!isKeeper) return;
-    	System.out.println(isKeeper);
+    public void changeRight(HttpServletRequest request, JSONObject ret, boolean value) {
+    	User user = checkLogin(request, ret, true);
+    	if (user == null) return;
     	
     	String[] inforKey = {"changedID"};
     	JSONObject Data = getInformation(request, inforKey, ret);
     	if (Data == null) return;
     	String changedID = Data.getString("changedID");
     	
-    	if (!dataBase.checkElement("user", "uniformID", "'"+changedID+"'")) {
+    	boolean isSuccess = library.userList.changeRight(changedID, value);
+    	if (!isSuccess) {
     		ret.accumulate("isSuccess", "false");
-			ret.accumulate("error", "NoSuchUser");
+			ret.accumulate("error", "changeRightFail");
 			return;
     	}
-    	System.out.println("checkPoint1");
-    	System.out.println("001\t"+ret.toString());
-    	System.out.println("checkPoint2");
-    	
-    	if (dataBase.getElementField("user", "isKeeper", "uniformID", "'"+changedID+"'").equals("1")) {
-    		ret.accumulate("isSuccess", "false");
-			ret.accumulate("error", "cannotPunichKeeper");
-			return;
-    	}
-    	System.out.println("002\t"+ret.toString());
-    	
-    	String string_db = dataBase.getElementField("user", "hasRight", "uniformID", "'"+changedID+"'");
-    	if (string_db.equals(value)) {
-    		System.out.println(string_db);
-    		System.out.println(value);
-    		ret.accumulate("isSuccess", "false");
-    		ret.accumulate("error", "NothingChanged,hasRight="+string_db);
-			return;
-    	}
-    	System.out.println("003\t"+ret.toString());
-    	
-    	dataBase.updateField("user", "uniformID", "'"+changedID+"'", "hasRight", "'"+value+"'");
     	ret.accumulate("isSuccess", "true");
-    	System.out.println("004\t"+ret.toString());
     }
     /**
      * 添加图书
@@ -337,8 +293,8 @@ public class WebSever extends HttpServlet
      * @param ret
      */
     public void addBook(HttpServletRequest request, JSONObject ret) {
-    	String UserID = checkLogin(request, ret);
-    	if (UserID == null) return;
+    	User user = checkLogin(request, ret, true);
+    	if (user == null) return;
 		
     	String[] inforKey = {"bookID", "bookName", "bookInfor"};
     	JSONObject Data = getInformation(request, inforKey, ret);
@@ -347,11 +303,7 @@ public class WebSever extends HttpServlet
     	String bookName = Data.getString("bookName");
     	String bookInfor= Data.getString("bookInfor");
     	
-    	boolean isKeeper = checkKeeper(ret, UserID);
-    	if (!isKeeper) return;
-    	
     	boolean isSuccess = library.bookList.addBook(bookID, bookName, bookInfor);
-    	
     	if (!isSuccess) {
     		ret.accumulate("isSuccess", "false");
 			ret.accumulate("error", "WrongBookInfor");
@@ -367,19 +319,15 @@ public class WebSever extends HttpServlet
      * @param ret
      */
     public void removeBook(HttpServletRequest request, JSONObject ret) {
-    	String UserID = checkLogin(request, ret);
-    	if (UserID == null) return;
+    	User user = checkLogin(request, ret, true);
+    	if (user == null) return;
 		
     	String[] inforKey = {"bookID"};
     	JSONObject Data = getInformation(request, inforKey, ret);
     	if (Data == null) return;
     	String bookID 		= Data.getString("bookID");
     	
-    	boolean isKeeper = checkKeeper(ret, UserID);
-    	if (!isKeeper) return;
-    	
     	boolean isSuccess = library.bookList.removeBook(bookID);
-    	
     	if (!isSuccess) {
     		ret.accumulate("isSuccess", "false");
 			ret.accumulate("error", "WrongBookInfor");
@@ -395,8 +343,8 @@ public class WebSever extends HttpServlet
      * @param ret
      */
     public void checkBookList(HttpServletRequest request, JSONObject ret) {
-    	String UserID = checkLogin(request, ret);
-    	if (UserID == null) return;
+    	User user = checkLogin(request, ret, false);
+    	if (user == null) return;
 		
     	Vector<Book> books= library.bookList.getAllBooks();
     	ret.accumulate("booknum", books.size());
@@ -411,8 +359,8 @@ public class WebSever extends HttpServlet
      * @param ret
      */
     public void checkBookID(HttpServletRequest request, JSONObject ret) {
-    	String UserID = checkLogin(request, ret);
-    	if (UserID == null) return;
+    	User user = checkLogin(request, ret, false);
+    	if (user == null) return;
 		
     	String[] inforKey = {"bookID"};
     	JSONObject Data = getInformation(request, inforKey, ret);
@@ -431,15 +379,53 @@ public class WebSever extends HttpServlet
     	ret.accumulate("isSuccess", "true");
     }
     /**
+     * 查询指定名字的图书，支持模糊匹配（目前只做了子串）
+     * @param request
+     * @param ret
+     */
+    public void checkBookName(HttpServletRequest request, JSONObject ret) {
+    	User user = checkLogin(request, ret, false);
+    	if (user == null) return;
+		
+    	String[] inforKey = {"bookName"};
+    	JSONObject Data = getInformation(request, inforKey, ret);
+    	if (Data == null) return;
+    	String bookName	= Data.getString("bookName");
+    	
+    	Vector<Book> books= library.bookList.searchBooksName(bookName);
+    	ret.accumulate("booknum", books.size());
+    	for (Book book : books) {
+    		ret.accumulate("book", book.toJson());
+    	}
+    	
+    	ret.accumulate("isSuccess", "true");
+    }
+    /**
+     * 查询自己借的快到期的书
+     * @param request
+     * @param ret
+     */
+    public void checkBorrowedBookList_me_due(HttpServletRequest request, JSONObject ret) {
+    	User user = checkLogin(request, ret, false);
+    	if (user == null) return;
+		
+    	Vector<Book> books= library.bookList.searchDueBooks(user.userID);
+    	ret.accumulate("booknum", books.size());
+    	for (Book book : books) {
+    		ret.accumulate("book", book.toJson());
+    	}
+    	ret.accumulate("isSuccess", "true");
+    }
+    /**
      * 查询自己借的书
      * @param request
      * @param ret
      */
     public void checkBorrowedBookList_me(HttpServletRequest request, JSONObject ret) {
-    	String UserID = checkLogin(request, ret);
-    	if (UserID == null) return;
+    	User user = checkLogin(request, ret, false);
+    	if (user == null) return;
 		
-    	Vector<Book> books= library.bookList.searchUserBooks(UserID);
+    	Vector<Book> books= library.bookList.searchUserBooks(user.userID);
     	ret.accumulate("booknum", books.size());
     	for (Book book : books) {
     		ret.accumulate("book", book.toJson());
@@ -452,11 +438,8 @@ public class WebSever extends HttpServlet
      * @param ret
      */
     public void checkBorrowedBookList_user(HttpServletRequest request, JSONObject ret) {
-    	String UserID = checkLogin(request, ret);
-    	if (UserID == null) return;
-    	
-    	boolean isKeeper = checkKeeper(ret, UserID);
-    	if (!isKeeper) return;
+    	User user = checkLogin(request, ret, true);
+    	if (user == null) return;
 		
     	String[] inforKey = {"checkUserID"};
     	JSONObject Data = getInformation(request, inforKey, ret);
@@ -476,11 +459,8 @@ public class WebSever extends HttpServlet
      * @param ret
      */
     public void borrowBook(HttpServletRequest request, JSONObject ret) {
-    	String UserID = checkLogin(request, ret);
-    	if (UserID == null) return;
-    	
-    	boolean isKeeper = checkKeeper(ret, UserID);
-    	if (!isKeeper) return;
+    	User user = checkLogin(request, ret, true);
+    	if (user == null) return;
 		
     	String[] inforKey = {"bookID", "borrowedUserID"};
     	JSONObject Data = getInformation(request, inforKey, ret);
@@ -494,12 +474,13 @@ public class WebSever extends HttpServlet
 			ret.accumulate("error", "WrongBookID");
 			return;
     	}
-    	if (!dataBase.checkElement("user", "uniformID", "'"+borrowedUserID+"'")) {
+    	User borrowedUser = library.userList.getUser(borrowedUserID);
+    	if (borrowedUser == null) {
     		ret.accumulate("isSuccess", "false");
 			ret.accumulate("error", "borrowedUserIDNotFound");
 			return;
     	}
-    	if (dataBase.getElementField("user", "hasRight", "uniformID", "'"+borrowedUserID+"'").equals("0")) {
+    	if (!borrowedUser.hasRight) {
     		ret.accumulate("isSuccess", "false");
 			ret.accumulate("error", "noRight");
 			return;
@@ -519,8 +500,8 @@ public class WebSever extends HttpServlet
      * @param ret
      */
     public void renewBook(HttpServletRequest request, JSONObject ret) {
-    	String UserID = checkLogin(request, ret);
-    	if (UserID == null) return;
+    	User user = checkLogin(request, ret, false);
+    	if (user == null) return;
 		
     	String[] inforKey = {"bookID"};
     	JSONObject Data = getInformation(request, inforKey, ret);
@@ -533,13 +514,13 @@ public class WebSever extends HttpServlet
 			ret.accumulate("error", "WrongBookID");
 			return;
     	}
-    	if (dataBase.getElementField("user", "hasRight", "uniformID", "'"+UserID+"'").equals("0")) {
+    	if (!user.hasRight) {
     		ret.accumulate("isSuccess", "false");
 			ret.accumulate("error", "noRight");
 			return;
     	}
     	
-    	boolean isSuccess = book.setRenewed(dataBase, UserID);
+    	boolean isSuccess = book.setRenewed(dataBase, user.userID);
     	if (!isSuccess) {
     		ret.accumulate("isSuccess", "false");
 			ret.accumulate("error", "renewFailed");
@@ -553,11 +534,8 @@ public class WebSever extends HttpServlet
      * @param ret
      */
     public void returnBook(HttpServletRequest request, JSONObject ret) {
-    	String UserID = checkLogin(request, ret);
-    	if (UserID == null) return;
-    	
-    	boolean isKeeper = checkKeeper(ret, UserID);
-    	if (!isKeeper) return;
+    	User user = checkLogin(request, ret, true);
+    	if (user == null) return;
 		
     	String[] inforKey = {"bookID"};
     	JSONObject Data = getInformation(request, inforKey, ret);

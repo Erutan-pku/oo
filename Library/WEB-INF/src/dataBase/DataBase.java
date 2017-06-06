@@ -15,7 +15,7 @@ public class DataBase {
 	public DataBase(String password) {
 		try {
 			if (password==null)
-				password="不告诉你";
+				password="19920326";
 			connection = getConnection(password);
 		} catch (Exception e) {
 			System.err.println("connection error");
