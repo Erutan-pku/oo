@@ -4,6 +4,7 @@ oo course, http://sei.pku.edu.cn/~caodg/course/oo/
 ### Part_0
 
 * [程序设计语言的OO特性调研报告](https://github.com/Erutan-pku/oo/blob/4a1e58e83da0b94446a0fde12f7c4a2cef412ff4/PKU_Erutan%20程序设计语言的OO特性调研报告.pdf)
+* [课堂报告：程序设计语言的发展](https://github.com/Erutan-pku/oo/blob/master/report/报告_程序设计语言的发展.pdf)
 
 ### Part_1 甲方：课程管理系统
 
@@ -19,3 +20,5 @@ oo course, http://sei.pku.edu.cn/~caodg/course/oo/
 * [系统设计报告](https://github.com/Erutan-pku/oo/blob/master/图书馆管理系统系统设计报告.md)
 * [系统交付报告](https://github.com/Erutan-pku/oo/blob/master/图书馆管理系统系统交付报告.md)
 * [系统地址](http://59.108.48.17:8080/test_Library.html)
+* [需求变更后的第二轮开发文档]()
+* [项目总结报告]()
